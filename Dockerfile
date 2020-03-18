@@ -3,58 +3,53 @@ FROM ubuntu:xenial
 MAINTAINER PhenoMeNal-H2020 Project ( phenomenal-h2020-users@googlegroups.com )
 
 LABEL Description="OpenMS port."
-LABEL software.version="2.1.0"
-LABEL version="0.2"
+LABEL software.version="2.4.0"
+LABEL version="0.1"
+
+ENV software_version="2.4.0"
 
 # Install dependencies
-RUN apt-get -y update
-RUN apt-get -y --no-install-recommends install cmake g++ autoconf automake qt4-dev-tools patch libtool make git software-properties-common python-software-properties libboost-all-dev libsvm-dev libglpk-dev libzip-dev zlib1g-dev libxerces-c-dev libbz2-dev libqt4-dbg libqt4-dev libqt4-opengl-dev libqtwebkit-dev
-RUN apt-get -y --no-install-recommends install libboost-regex-dev libboost-iostreams-dev libboost-date-time-dev libboost-math-dev libsvm-dev libglpk-dev libzip-dev zlib1g-dev libxerces-c-dev libbz2-dev seqan-dev libwildmagic-dev libwildmagic5v5 libwildmagic5v5-dbg libeigen3-dev
-RUN apt-get -y --no-install-recommends install python-setuptools python-pip python-nose python-numpy python-wheel cython cython-dbg doxygen doxygen-dbg 
+RUN apt-get -y update && 	apt-get install -y g++ autoconf make patch libtool make git automake wget build-essential cmake && 	apt-get install -y ninja-build qt5-default libqt5serialport5-dev qtscript5-dev libqt5svg5-dev zip && 	apt-get clean && 	apt-get purge && 	rm -rf /var/lib/apt/lists/*
+WORKDIR /tmp
 
-RUN pip install autowrap
+RUN git clone https://github.com/OpenMS/OpenMS.git && 	cd OpenMS && 	git checkout --quiet tags/Release2.4.0 && 	git submodule --quiet update --init contrib && 	git submodule --quiet update --init THIRDPARTY && 	cd THIRDPARTY && 	rm -rf .git Windows MacOS Linux/32bit
 
-# Create needed directories
-RUN mkdir /usr/src/openms
-RUN mkdir /usr/src/openms/contrib-build
-RUN mkdir /usr/src/openms/openms-build
+RUN mkdir contrib-build && 	cd contrib-build && 	cmake -DBUILD_TYPE=LIST ../OpenMS/contrib && 	cmake -DBUILD_TYPE=ALL -DNUMBER_OF_JOBS=4 ../OpenMS/contrib && 	rm -rf archives src
 
-# Build contrib stuff
-WORKDIR /usr/src/openms
-RUN git clone https://github.com/OpenMS/contrib
-WORKDIR /usr/src/openms/contrib-build
-RUN cmake -DBUILD_TYPE=SEQAN ../contrib && \
-    cmake -DBUILD_TYPE=WILDMAGIC ../contrib && \
-    cmake -DBUILD_TYPE=EIGEN ../contrib
+ENV PATH=/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# Build OpenMS
-WORKDIR /usr/src/openms
-RUN git clone https://github.com/OpenMS/OpenMS
-WORKDIR /usr/src/openms/OpenMS
-RUN git checkout tags/Release2.1.0
-WORKDIR /usr/src/openms/openms-build
-RUN cmake -DCMAKE_PREFIX_PATH="/usr/src/openms/contrib-build/;/usr/src/openms/contrib/;/usr/;/usr/local" -DBOOST_USE_STATIC=OFF -DHAS_XSERVER=Off ../OpenMS && make
+ENV PATH=/tmp/OpenMS/THIRDPARTY/All/LuciPHOr2:/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# Build PyOpenMS
-#WORKDIR /usr/src/openms/openms-build
-#RUN cmake -DCMAKE_PREFIX_PATH="/usr/src/openms/contrib-build/;/usr/src/openms/contrib/;/usr/;/usr/local" -DBOOST_USE_STATIC=OFF -DHAS_XSERVER=Off -DPYOPENMS=ON ../OpenMS && make pyopenms
-#RUN easy_install pyopenms
-RUN pip install -Iv pyopenms==2.1.0
+ENV PATH=/tmp/OpenMS/THIRDPARTY/All/MSGFPlus:/tmp/OpenMS/THIRDPARTY/All/LuciPHOr2:/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# Clean up
-RUN apt-get -y clean && apt-get -y autoremove && rm -rf /var/lib/{cache,log}/ /tmp/* /var/tmp/*
+ENV PATH=/tmp/OpenMS/THIRDPARTY/All/Sirius:/tmp/OpenMS/THIRDPARTY/All/MSGFPlus:/tmp/OpenMS/THIRDPARTY/All/LuciPHOr2:/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# Set environment and user
-ENV PATH /usr/src/openms/openms-build/bin/:$PATH
-#RUN groupadd -g 9999 -f openms
-#RUN useradd -d /home/openms -m -g openms -u 9999 -s /bin/bash openms
-#RUN echo 'openms:openms' | chpasswd
-#WORKDIR /home/openms
-#USER openms
+ENV PATH=/tmp/OpenMS/THIRDPARTY/Linux/64bit/:/tmp/OpenMS/THIRDPARTY/All/Sirius:/tmp/OpenMS/THIRDPARTY/All/MSGFPlus:/tmp/OpenMS/THIRDPARTY/All/LuciPHOr2:/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# Add testing to container
-ADD runTest1.sh /usr/local/bin/runTest1.sh
+ENV PATH=/tmp/OpenMS/THIRDPARTY/Linux/64bit/Comet:/tmp/OpenMS/THIRDPARTY/Linux/64bit/:/tmp/OpenMS/THIRDPARTY/All/Sirius:/tmp/OpenMS/THIRDPARTY/All/MSGFPlus:/tmp/OpenMS/THIRDPARTY/All/LuciPHOr2:/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# Docker entrypoint
-#ENTRYPOINT [ "/bin/sh" ]
+ENV PATH=/tmp/OpenMS/THIRDPARTY/Linux/64bit/Fido:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Comet:/tmp/OpenMS/THIRDPARTY/Linux/64bit/:/tmp/OpenMS/THIRDPARTY/All/Sirius:/tmp/OpenMS/THIRDPARTY/All/MSGFPlus:/tmp/OpenMS/THIRDPARTY/All/LuciPHOr2:/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
+ENV PATH=/tmp/OpenMS/THIRDPARTY/Linux/64bit/MyriMatch:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Fido:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Comet:/tmp/OpenMS/THIRDPARTY/Linux/64bit/:/tmp/OpenMS/THIRDPARTY/All/Sirius:/tmp/OpenMS/THIRDPARTY/All/MSGFPlus:/tmp/OpenMS/THIRDPARTY/All/LuciPHOr2:/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+ENV PATH=/tmp/OpenMS/THIRDPARTY/Linux/64bit/OMSSA:/tmp/OpenMS/THIRDPARTY/Linux/64bit/MyriMatch:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Fido:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Comet:/tmp/OpenMS/THIRDPARTY/Linux/64bit/:/tmp/OpenMS/THIRDPARTY/All/Sirius:/tmp/OpenMS/THIRDPARTY/All/MSGFPlus:/tmp/OpenMS/THIRDPARTY/All/LuciPHOr2:/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+ENV PATH=/tmp/OpenMS/THIRDPARTY/Linux/64bit/Percolator:/tmp/OpenMS/THIRDPARTY/Linux/64bit/OMSSA:/tmp/OpenMS/THIRDPARTY/Linux/64bit/MyriMatch:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Fido:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Comet:/tmp/OpenMS/THIRDPARTY/Linux/64bit/:/tmp/OpenMS/THIRDPARTY/All/Sirius:/tmp/OpenMS/THIRDPARTY/All/MSGFPlus:/tmp/OpenMS/THIRDPARTY/All/LuciPHOr2:/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+ENV PATH=/tmp/OpenMS/THIRDPARTY/Linux/64bit/Sirius:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Percolator:/tmp/OpenMS/THIRDPARTY/Linux/64bit/OMSSA:/tmp/OpenMS/THIRDPARTY/Linux/64bit/MyriMatch:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Fido:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Comet:/tmp/OpenMS/THIRDPARTY/Linux/64bit/:/tmp/OpenMS/THIRDPARTY/All/Sirius:/tmp/OpenMS/THIRDPARTY/All/MSGFPlus:/tmp/OpenMS/THIRDPARTY/All/LuciPHOr2:/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+ENV PATH=/tmp/OpenMS/THIRDPARTY/Linux/64bit/SpectraST:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Sirius:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Percolator:/tmp/OpenMS/THIRDPARTY/Linux/64bit/OMSSA:/tmp/OpenMS/THIRDPARTY/Linux/64bit/MyriMatch:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Fido:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Comet:/tmp/OpenMS/THIRDPARTY/Linux/64bit/:/tmp/OpenMS/THIRDPARTY/All/Sirius:/tmp/OpenMS/THIRDPARTY/All/MSGFPlus:/tmp/OpenMS/THIRDPARTY/All/LuciPHOr2:/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+ENV PATH=/tmp/OpenMS/THIRDPARTY/Linux/64bit/XTandem:/tmp/OpenMS/THIRDPARTY/Linux/64bit/SpectraST:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Sirius:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Percolator:/tmp/OpenMS/THIRDPARTY/Linux/64bit/OMSSA:/tmp/OpenMS/THIRDPARTY/Linux/64bit/MyriMatch:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Fido:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Comet:/tmp/OpenMS/THIRDPARTY/Linux/64bit/:/tmp/OpenMS/THIRDPARTY/All/Sirius:/tmp/OpenMS/THIRDPARTY/All/MSGFPlus:/tmp/OpenMS/THIRDPARTY/All/LuciPHOr2:/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+RUN mkdir OpenMS-build && 	cd OpenMS-build && 	cmake -DOPENMS_CONTRIB_LIBS="/tmp/contrib-build;/usr/;/usr/local" -DBOOST_USE_STATIC=OFF -DCMAKE_INSTALL_PREFIX="/usr/local/" -DHAS_XSERVER=Off ../OpenMS && 	make && 	make install && 	rm -rf src doc CMakeFiles
+
+ENV PATH=/usr/local/bin:/tmp/OpenMS/THIRDPARTY/Linux/64bit/XTandem:/tmp/OpenMS/THIRDPARTY/Linux/64bit/SpectraST:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Sirius:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Percolator:/tmp/OpenMS/THIRDPARTY/Linux/64bit/OMSSA:/tmp/OpenMS/THIRDPARTY/Linux/64bit/MyriMatch:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Fido:/tmp/OpenMS/THIRDPARTY/Linux/64bit/Comet:/tmp/OpenMS/THIRDPARTY/Linux/64bit/:/tmp/OpenMS/THIRDPARTY/All/Sirius:/tmp/OpenMS/THIRDPARTY/All/MSGFPlus:/tmp/OpenMS/THIRDPARTY/All/LuciPHOr2:/tmp/OpenMS/THIRDPARTY/All/:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+ENV LD_LIBRARY_PATH=/usr/local/lib/:
+
+WORKDIR /usr/local/
+
+RUN zip -r OpenMS-2.4.0.zip lib/lib* share/OpenMS/* bin/*
+
+WORKDIR /home/biodocker/
